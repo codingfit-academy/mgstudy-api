@@ -29,6 +29,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from .config import settings
 from .database import Base, engine, get_db
 from .models import Item
+from .routers import ai
 
 
 # ── 앱 시작 시 테이블 자동 생성 ───────────────────────────────
@@ -118,6 +119,5 @@ async def delete_item(item_id: int, db: AsyncSession = Depends(get_db)):
     await db.commit()
 
 
-# ── 라우터 추가 예시 ───────────────────────────────────────────
-# from .routers import posts
-# app.include_router(posts.router, prefix="/posts", tags=["posts"])
+# ── 라우터 등록 ───────────────────────────────────────────────
+app.include_router(ai.router, prefix="/ai", tags=["ai"])

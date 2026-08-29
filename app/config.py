@@ -35,6 +35,9 @@ class Settings:
             f"@{self.db_host}:{self.db_port}/{self.db_name}"
         )
 
+    # ── AI (Anthropic Claude, 서버에서만 사용) ─────────────────
+    anthropic_api_key: str = os.getenv("ANTHROPIC_API_KEY", "")
+
     # ── 프론트에 내려줄 공개 값 (GET /config) ─────────────────
     #    ⚠ 브라우저에 노출됩니다. 공개해도 되는 값만 넣으세요.
     @property
