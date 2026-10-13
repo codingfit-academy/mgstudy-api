@@ -27,16 +27,37 @@ from sqlalchemy import select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from .config import settings
-from .database import Base, engine, get_db
-from .models import Item
-from .routers import ai
+from .database import Base, SessionLocal, engine, get_db
+from .models import Item, User
+from .routers import ai, auth, history
+from .security import hash_password
 
 
-# ── 앱 시작 시 테이블 자동 생성 ───────────────────────────────
+# ── 앱 시작 시 테이블 자동 생성 + QA 테스트 계정 시드 ─────────────
+async def _seed_test_account():
+    async with SessionLocal() as db:
+        existing = await db.execute(
+            select(User).where(User.email == settings.seed_test_email)
+        )
+        if existing.scalar_one_or_none():
+            return
+        db.add(
+            User(
+                email=settings.seed_test_email,
+                password_hash=hash_password(settings.seed_test_password),
+                name="테스트 계정",
+                nickname="테스트 계정",
+                avatar="🌟",
+            )
+        )
+        await db.commit()
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+    await _seed_test_account()
     yield
 
 
@@ -121,3 +142,5 @@ async def delete_item(item_id: int, db: AsyncSession = Depends(get_db)):
 
 # ── 라우터 등록 ───────────────────────────────────────────────
 app.include_router(ai.router, prefix="/ai", tags=["ai"])
+app.include_router(auth.router, prefix="/auth", tags=["auth"])
+app.include_router(history.router, prefix="/history", tags=["history"])

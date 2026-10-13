@@ -38,6 +38,10 @@ class Settings:
     # ── AI (Anthropic Claude, 서버에서만 사용) ─────────────────
     anthropic_api_key: str = os.getenv("ANTHROPIC_API_KEY", "")
 
+    # ── QA 테스트 계정 (앱 시작 시 lifespan에서 자동 시드) ────────
+    seed_test_email: str = os.getenv("SEED_TEST_EMAIL", "test@mgstudy.com")
+    seed_test_password: str = os.getenv("SEED_TEST_PASSWORD", "test1234")
+
     # ── 프론트에 내려줄 공개 값 (GET /config) ─────────────────
     #    ⚠ 브라우저에 노출됩니다. 공개해도 되는 값만 넣으세요.
     @property
