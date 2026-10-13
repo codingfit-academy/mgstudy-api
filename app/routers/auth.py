@@ -15,7 +15,7 @@ from datetime import datetime, timedelta, timezone
 from typing import Optional
 
 from fastapi import APIRouter, Depends, Header, HTTPException
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel, Field, field_validator
 from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -38,6 +38,8 @@ class SignupRequest(BaseModel):
     name: str
     email: str
     password: str
+    # 선택. AI가 낱말·문장 난이도를 맞추는 데만 쓴다 (비우면 초등학생 기본 수준).
+    age: Optional[int] = Field(default=None, ge=1, le=19)
 
     @field_validator("name")
     @classmethod
@@ -73,6 +75,7 @@ class LoginRequest(BaseModel):
 class UpdateProfileRequest(BaseModel):
     nickname: Optional[str] = None
     avatar: Optional[str] = None
+    age: Optional[int] = Field(default=None, ge=1, le=19)
 
 
 class AccountOut(BaseModel):
@@ -80,6 +83,7 @@ class AccountOut(BaseModel):
     email: str
     nickname: str
     avatar: str
+    age: Optional[int]
 
 
 class AuthResult(BaseModel):
@@ -89,7 +93,11 @@ class AuthResult(BaseModel):
 
 def _to_account_out(user: User) -> AccountOut:
     return AccountOut(
-        name=user.name, email=user.email, nickname=user.nickname, avatar=user.avatar
+        name=user.name,
+        email=user.email,
+        nickname=user.nickname,
+        avatar=user.avatar,
+        age=user.age,
     )
 
 
@@ -117,6 +125,7 @@ async def signup(body: SignupRequest, db: AsyncSession = Depends(get_db)):
         name=body.name,
         nickname=body.name,
         avatar="🦕",
+        age=body.age,
     )
     db.add(user)
     await db.commit()
@@ -164,6 +173,8 @@ async def update_me(
         user.nickname = nickname if nickname else user.name
     if body.avatar is not None:
         user.avatar = body.avatar
+    if body.age is not None:
+        user.age = body.age
     await db.commit()
     await db.refresh(user)
     return _to_account_out(user)
